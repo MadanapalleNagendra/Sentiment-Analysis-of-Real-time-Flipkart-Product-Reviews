@@ -1,62 +1,50 @@
-from flask import Flask, render_template, request
+import streamlit as st
 import joblib
-import nltk
-import string
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
+import os
 
-# Download necessary NLTK data
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('stopwords')
+# Set page configuration
+st.set_page_config(page_title="Sentiment Analysis", page_icon="📊", layout="centered")
 
-# Initialize Flask app
-app = Flask(__name__)
+# Custom CSS for styling
+st.markdown("""
+    <style>
+    .main { background-color: #f5f5f5; }
+    .stTextArea textarea { font-size: 18px; }
+    .stButton button { background-color: #4CAF50; color: white; font-size: 18px; padding: 10px 20px; }
+    .stTitle { color: #0078D7; text-align: center; }
+    </style>
+""", unsafe_allow_html=True)
 
-# Load the vectorizer and model
-vectorizer = joblib.load("model/count_mnd_vectorizer.pkl")
-model = joblib.load("model/logistic_regression_pipeline.pkl", strict=False)
+# Load Model with error handling
+model_path = r"C:\Users\Nagendra\sentiment_model.pkl"  # Relative path for cloud compatibility
 
-# Define the clean function
-lemmatizer = WordNetLemmatizer()
+if os.path.exists(model_path):
+    model = joblib.load(model_path)
+else:
+    st.error("🔴 Error: Model file not found! Please train and save 'sentiment_model.pkl' before running the app.")
+    st.stop()  # Stop execution if model is missing
 
-def clean(doc): # doc is a string of text
-    
-    
-    # Remove punctuation and numbers.
-    doc = "".join([char for char in doc if char not in string.punctuation and not char.isdigit()])
+# UI Design
+st.title("📊 Flipkart Product Reviews Sentiment Analysis")
+st.subheader("🔍 Enter a review to predict sentiment")
 
-    # Converting to lower case
-    doc = doc.lower()
-    
-    # Tokenization
-    tokens = nltk.word_tokenize(doc)
+# Input Text Box
+review_text = st.text_area("📝 Write a Review Below:", height=150)
 
-    # Lemmatize
-    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
+# Predict Sentiment Button
+if st.button("🔍 Predict Sentiment"):
+    if review_text.strip():
+        prediction = model.predict([review_text])[0]
+        sentiment_label = "😊 Positive" if prediction == 1 else "😞 Negative"
 
-    # Stop word removal
-    stop_words = set(stopwords.words('english'))
-    filtered_tokens = [word for word in lemmatized_tokens if word.lower() not in stop_words]
-    
-    # Join and return
-    return " ".join(filtered_tokens)
+        # Display Result
+        st.success(f"🎯 **Predicted Sentiment:** {sentiment_label}")
 
-# Label mapping
-label_mapping = {1: "Positive", 0: "Negative"}
+        # Display feedback message
+        st.info("✅ If the prediction is correct, great! Otherwise, consider retraining the model.")
+    else:
+        st.warning("⚠️ Please enter a review before clicking 'Predict Sentiment'.")
 
-@app.route("/", methods=["GET", "POST"])
-def home():
-    if request.method == "POST":
-        text = request.form["text"]
-        cleaned_text = clean(text)  # Apply preprocessing
-        transformed_text = vectorizer.transform([cleaned_text])  # Vectorize
-        prediction = model.predict(transformed_text)[0]  # Predict sentiment
-        output_label = label_mapping[prediction]  # Map to label
-        return render_template("index.html", text=text, prediction=output_label)
-
-    return render_template("index.html", text="", prediction="")
-
-if __name__ == "__main__":
-    app.run(debug=True)
+# Footer
+st.markdown("---")
+st.markdown("<p style='text-align:center;'>📌 Developed by <b>Nagendra</b> | MLOps & Data Science</p>", unsafe_allow_html=True)
