@@ -16,7 +16,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Load Model with error handling
-model_path =sentiment_model.pkl  # Relative path for cloud compatibility
+model_path =r"sentiment_model.pkl" # Relative path for cloud compatibility
 
 if os.path.exists(model_path):
     model = joblib.load(model_path)
