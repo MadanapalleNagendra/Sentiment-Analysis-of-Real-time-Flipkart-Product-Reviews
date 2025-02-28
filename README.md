@@ -122,17 +122,6 @@ Your app is now running on **http://your-ec2-public-ip:5000/**
 
 ---
 
-## Submission
-Click [here](#) to submit your work.
 
----
-
-## Authors
-- **Your Name** - *Developer & Data Scientist*
-
----
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
